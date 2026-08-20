@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Malla Interactiva</title>
+    <style>
+        :root {
+            --bg-color: #121214;
+            /* Fondo semi-transparente para el efecto cristal */
+            --card-bg: rgba(30, 30, 36, 0.7); 
+            --text-color: #e1e1e6;
+            --pendiente: #4d4d5a;
+            --cursando: #f1c40f;
+            --aprobado: #2ecc71;
+            --bloqueado: #e74c3c;
+            --highlight-req: #3498db;
+            --highlight-unlocked: #9b59b6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px 0;
+            /* Configuraciones del fondo de pantalla rotativo */
+            background-color: var(--bg-color);
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            transition: background-image 0.5s ease-in-out;
+        }
+
+        .header-container {
+            text-align: center;
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .estadisticas {
+            background-color: var(--card-bg);
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        /* ESTILO DEL BOTÓN DE ZOOM */
+        .btn-glass {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            font-weight: bold;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .btn-glass:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .malla-container {
+            display: grid;
+            grid-template-columns: repeat(12, 200px); 
+            grid-template-rows: 40px auto; 
+            gap: 15px;
+            overflow-x: auto;
+            padding: 10px 30px;
+            justify-content: start;
+            transition: zoom 0.3s ease; /* Transición suave para el zoom */
+        }
+
+        .malla-container::-webkit-scrollbar {
+            height: 12px;
+        }
+        .malla-container::-webkit-scrollbar-track {
+            background: rgba(18, 18, 20, 0.5);
+            border-radius: 8px;
+        }
+        .malla-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+        }
+        .malla-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        /* --- ESTILOS PARA LAS ETAPAS --- */
+        .etapa {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        .etapa-comun {
+            grid-column: 1 / span 4; 
+            background: linear-gradient(135deg, rgba(41, 128, 185, 0.8), rgba(52, 152, 219, 0.8)); 
+            border: 1px solid rgba(41, 128, 185, 0.5);
+        }
+        .etapa-licenciatura {
+            grid-column: 5 / span 4;
+            background: linear-gradient(135deg, rgba(211, 84, 0, 0.8), rgba(230, 126, 34, 0.8));
+            border: 1px solid rgba(211, 84, 0, 0.5);
+        }
+        .etapa-especialidad {
+            grid-column: 9 / span 3;
+            background: linear-gradient(135deg, rgba(142, 68, 173, 0.8), rgba(155, 89, 182, 0.8));
+            border: 1px solid rgba(142, 68, 173, 0.5);
+        }
+        .etapa-extras {
+            grid-column: 12 / span 1;
+            background: linear-gradient(135deg, rgba(44, 62, 80, 0.8), rgba(52, 73, 94, 0.8));
+            border: 1px solid rgba(44, 62, 80, 0.5);
+        }
+
+        /* --- SEMESTRES --- */
+        .semestre {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+
+        .semestre-titulo {
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #ffffff;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+            margin-bottom: 5px;
+        }
+
+        /* --- RAMOS --- */
+        .ramo {
+            background-color: var(--card-bg);
+            border-left: 6px solid var(--pendiente);
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            position: relative;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .ramo:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+            background-color: rgba(45, 45, 55, 0.85); 
+        }
+
+        .codigo {
+            font-size: 0.75rem;
+            color: #b3b3b3;
+            font-weight: bold;
+            padding-right: 70px; 
+            word-wrap: break-word; 
+        }
+
+        .credito-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            font-size: 0.7rem;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .nombre {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-top: 5px;
+            line-height: 1.2;
+            word-wrap: break-word;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .ramo.estado-pendiente { border-left-color: var(--pendiente); }
+        .ramo.estado-cursando { 
+            border-left-color: var(--cursando); 
+            background-color: rgba(241, 196, 15, 0.15); 
+        }
+        .ramo.estado-aprobado { 
+            border-left-color: var(--aprobado); 
+            background-color: rgba(46, 204, 113, 0.15); 
+        }
+
+        .ramo.es-requisito { outline: 2px solid var(--highlight-req); }
+        .ramo.es-desbloqueado { outline: 2px solid var(--highlight-unlocked); }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); border-left-color: var(--bloqueado); }
+            75% { transform: translateX(5px); border-left-color: var(--bloqueado); }
+        }
+        .error-shake { animation: shake 0.3s ease; }
+    </style>
+</head>
+<body>
+
+    <div class="header-container">
+        <h1>Ingeniería Civil Eléctrica - Potencia</h1>
+        <div class="header-controls">
+            <div class="estadisticas">
+                <strong>Total Créditos Aprobados: </strong> <span id="contador-creditos">0</span>
+            </div>
+            <button id="btn-zoom" class="btn-glass">🔍</button>
+        </div>
+    </div>
+
+    <div class="malla-container">
+        <div class="etapa etapa-comun">Plan Común</div>
+        <div class="etapa etapa-licenciatura">Licenciatura</div>
+        <div class="etapa etapa-especialidad">Especialidad</div>
+        <div class="etapa etapa-extras">Titulación</div>
+
+        <div class="semestre">
+            <div class="semestre-titulo">Semestre I</div>
+            <div class="ramo estado-pendiente" id="MA1001" data-reqs="" data-creditos="6">
+                <div class="codigo">MA1001</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Introducción al Cálculo</div>
+            </div>
+            <div class="ramo estado-pendiente" id="MA1101" data-reqs="" data-creditos="6">
+                <div class="codigo">MA1101</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Introducción al Álgebra</div>
+            </div>
+            <div class="ramo estado-pendiente" id="FI1000" data-reqs="" data-creditos="6">
+                <div class="codigo">FI1000</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Introducción a la Física Clásica</div>
+            </div>
+            <div class="ramo estado-pendiente" id="CC1000" data-reqs="" data-creditos="3">
+                <div class="codigo">CC1000</div>
+                <div class="credito-badge">3 Créditos</div>
+                <div class="nombre">Herramientas Computacionales para ingeniería y ciencias</div>
+            </div>
+            <div class="ramo estado-pendiente" id="BT1211" data-reqs="" data-creditos="3">
+                <div class="codigo">BT1211</div>
+                <div class="credito-badge">3 Créditos</div>
+                <div class="nombre">Aplicaciones de la Biología a la Ingeniería y Ciencias</div>
+            </div>
+            <div class="ramo estado-pendiente" id="CD1100" data-reqs="" data-creditos="6">
+                <div class="codigo">CD1100</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Desafíos de innovación en ingeniería y ciencias</div>
+            </div>
+        </div>
+
+        <div class="semestre">
+            <div class="semestre-titulo">Semestre II</div>
+           <div class="ramo estado-pendiente" id="MA1002" data-reqs="MA1001" data-creditos="6">
+                <div class="codigo">MA1002</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Cálculo Diferencial e Integral</div>
+            </div>
+            <div class="ramo estado-pendiente" id="MA1102" data-reqs="MA1101" data-creditos="6">
+                <div class="codigo">MA1102</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Álgebra Lineal</div>
+            </div>
+            <div class="ramo estado-pendiente" id="FI1100" data-reqs="MA1001, MA1101, FI1000" data-creditos="6">
+                <div class="codigo">FI1100</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Introducción a la Física Moderna</div>
+            </div>
+            <div class="ramo estado-pendiente" id="CC1002" data-reqs="" data-creditos="6">
+                <div class="codigo">CC1002</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Introducción a la Programación</div>
+            </div>
+            <div class="ramo estado-pendiente" id="CD1201" data-reqs="CD1100" data-creditos="3">
+                <div class="codigo">CD1201</div>
+                <div class="credito-badge">3 Créditos</div>
+                <div class="nombre">Proyecto de innovación en ingeniería y ciencias</div>
+            </div>
+            <div class="ramo estado-pendiente" id="Electivo_PC" data-reqs="" data-creditos="3">
+                <div class="codigo">Electivo</div>
+                <div class="credito-badge">3 Créditos</div>
+                <div class="nombre">DR/EH/FG/EI/FT</div>
+            </div>
+        </div>
+
+        <div class="semestre">
+            <div class="semestre-titulo">Semestre III</div>
+            <div class="ramo estado-pendiente" id="MA2001" data-reqs="MA1002, MA1102" data-creditos="6">
+                <div class="codigo">MA2001</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Cálculo en Varias Variables</div>
+            </div>
+            <div class="ramo estado-pendiente" id="MA2601" data-reqs="MA1002, MA1102" data-creditos="6">
+                <div class="codigo">MA2601</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Ecuaciones Diferenciales Ordinarias</div>
+            </div>
+            <div class="ramo estado-pendiente" id="FI2001" data-reqs="FI1100, MA1102, MA1002" data-creditos="6">
+                <div class="codigo">FI2001</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Mecánica</div>
+            </div>
+            <div class="ramo estado-pendiente" id="FI2003" data-reqs="FI1100, MA1002" data-creditos="6">
+                <div class="codigo">FI2003</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Métodos Experimentales</div>
+            </div>
+            <div class="ramo estado-pendiente" id="IQ2211" data-reqs="CC1002, FI1100" data-creditos="6">
+                <div class="codigo">IQ2211</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Química</div>
+            </div>
+        </div>
+        
+        <div class="semestre">
+            <div class="semestre-titulo">Semestre IV</div>
+            <div class="ramo estado-pendiente" id="MA2002" data-reqs="MA2001, MA2601" data-creditos="6">
+                <div class="codigo">MA2002</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Cálculo Avanzado y Aplicaciones</div>
+            </div>
+            <div class="ramo estado-pendiente" id="IN2201" data-reqs="MA2001" data-creditos="6">
+                <div class="codigo">IN2201</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Economía</div>
+            </div>
+            <div class="ramo estado-pendiente" id="FI2002" data-reqs="MA2601, MA2001, FI2003" data-creditos="6">
+                <div class="codigo">FI2002</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Electromagnetismo</div>
+            </div>
+            <div class="ramo estado-pendiente" id="FI2004/IQ2212" data-reqs="IQ2211, FI2001, MA2001" data-creditos="6">
+                <div class="codigo">FI2004/IQ2212</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Termodinámica/ Termodinámica Química</div>
+            </div>
+            <div class="ramo estado-pendiente" id="CD2201" data-reqs="CD1201, FI2003" data-creditos="3">
+                <div class="codigo">CD2201</div>
+                <div class="credito-badge">3 Créditos</div>
+                <div class="nombre">Modulo Interdisciplinario</div>
+            </div>
+            <div class="ramo estado-pendiente" id="Electivo_PC_2" data-reqs="" data-creditos="3">
+                <div class="codigo">Electivo</div>
+                <div class="credito-badge">3 Créditos</div>
+                <div class="nombre">DR/EH/FG/EI/FT</div>
+            </div>
+        </div>
+
+        <div class="semestre">
+            <div class="semestre-titulo">Semestre V</div>
+            <div class="ramo estado-pendiente" id="EL3101" data-reqs="MA2002, FI2002" data-creditos="6">
+                <div class="codigo">EL3101</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Análisis y Diseño de Circuitos eléctricos</div>
+            </div>
+            <div class="ramo estado-pendiente" id="EL3102" data-reqs="CD2201, FI2002" data-creditos="6">
+                <div class="codigo">EL3102</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Sistemas Digitales</div>
+            </div>
+            <div class="ramo estado-pendiente" id="EL3103" data-reqs="FI2002" data-creditos="6">
+                <div class="codigo">EL3103</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Electromagnetismo Aplicado</div>
+            </div>
+            <div class="ramo estado-pendiente" id="EL3104" data-reqs="MA2001" data-creditos="6">
+                <div class="codigo">EL3104</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Probabilidad y Procesos Estocásticos</div>
+            </div>
+            <div class="ramo estado-pendiente" id="EL3105" data-reqs="CD2201" data-creditos="6">
+                <div class="codigo">EL3105</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Seminario de Ingeniería e Innovación Tecnológica</div>
+            </div>
+        </div>
+
+        <div class="semestre">
+            <div class="semestre-titulo">Semestre VI</div>
+            <div class="ramo estado-pendiente" id="EL3201" data-reqs="EL3101, EL3103" data-creditos="6">
+                <div class="codigo">EL3201</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Laboratorio de Ingeniería Eléctrica</div>
+            </div>
+            <div class="ramo estado-pendiente" id="EL3202" data-reqs="EL3101" data-creditos="6">
+                <div class="codigo">EL3202</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Circuitos Eléctricos Analógicos</div>
+            </div>
+            <div class="ramo estado-pendiente" id="EL3203" data-reqs="EL3101" data-creditos="6">
+                <div class="codigo">EL3203</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Análisis de Señales</div>
+            </div>
+            <div class="ramo estado-pendiente" id="EL3204" data-reqs="EL3104" data-creditos="6">
+                <div class="codigo">EL3204</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Análisis de Sistemas Dinámicos y Estimación</div>
+            </div>
+            <div class="ramo estado-pendiente" id="Electivo_Humanista" data-reqs="" data-creditos="3">
+                <div class="codigo">Electivo</div>
+                <div class="credito-badge">3 Créditos</div>
+                <div class="nombre">EH/FG</div>
+            </div>
+            <div class="ramo estado-pendiente" id="Electivo_Humanista_2" data-reqs="" data-creditos="3">
+                <div class="codigo">Electivo</div>
+                <div class="credito-badge">3 Créditos</div>
+                <div class="nombre">EH/FG</div>
+            </div>
+        </div>
+
+        <div class="semestre">
+            <div class="semestre-titulo">Semestre VII</div>
+            <div class="ramo estado-pendiente" id="EL4111" data-reqs="EL3101" data-creditos="6">
+                <div class="codigo">EL4111</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Conversión de la Energía y Sistemas de Eléctricos</div>
+            </div>
+            <div class="ramo estado-pendiente" id="EL4112" data-reqs="EL3203, EL3104" data-creditos="6">
+                <div class="codigo">EL4112</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Principios de Comunicaciones</div>
+            </div>
+            <div class="ramo estado-pendiente" id="EL4113" data-reqs="EL3203, EL3204" data-creditos="6">
+                <div class="codigo">EL4113</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Fundamentos de Control de Sistemas</div>
+            </div>
+            <div class="ramo estado-pendiente" id="EL4114" data-reqs="EL3104" data-creditos="6">
+                <div class="codigo">EL4114</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Optimización</div>
+            </div>
+            <div class="ramo estado-pendiente" id="Electivo_Licenciatura" data-reqs="" data-creditos="6">
+                <div class="codigo">----</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Electivo Licenciatura</div>
+            </div>
+            <div class="ramo estado-pendiente" id="EL4115" data-reqs="EL3101, EL3102, EL3105" data-creditos="7">
+                <div class="codigo">EL4115</div>
+                <div class="credito-badge">7 Créditos</div>
+                <div class="nombre">Práctica Profesional I</div>
+            </div>
+        </div>
+
+        <div class="semestre">
+            <div class="semestre-titulo">Semestre VIII</div>
+            <div class="ramo estado-pendiente" id="EL4103" data-reqs="EL4111" data-creditos="6">
+                <div class="codigo">EL4103</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Sistemas de Energía y Equipos Eléctricos</div>
+            </div>
+            <div class="ramo estado-pendiente" id="EL5203" data-reqs="EL4111" data-creditos="6">
+                <div class="codigo">EL5203</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Laboratorio de Energía</div>
+            </div>
+            <div class="ramo estado-pendiente" id="EL4203" data-reqs="EL3102, EL4114" data-creditos="6">
+                <div class="codigo">EL4203</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Programación Avanzada</div>
+            </div>
+            <div class="ramo estado-pendiente" id="EL4204" data-reqs="EL4115" data-creditos="6">
+                <div class="codigo">EL4204</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Formulación y Evaluación de Proyectos</div>
+            </div>
+            <div class="ramo estado-pendiente" id="Electivo_Licenciatura_2" data-reqs="" data-creditos="6">
+                <div class="codigo">----</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Electivo Licenciatura</div>
+            </div>
+        </div>
+
+        <div class="semestre">
+            <div class="semestre-titulo">Semestre IX</div>
+            <div class="ramo estado-pendiente" id="EL6101" data-reqs="EL4203, EL4204" data-creditos="12">
+                <div class="codigo">EL6101</div>
+                <div class="credito-badge">12 Créditos</div>
+                <div class="nombre">Taller de Proyectos Tecnológicos</div>
+            </div>
+            <div class="ramo estado-pendiente" id="Electivo_Especializacion" data-reqs="" data-creditos="6">
+                <div class="codigo">----</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Electivo Especialización</div>
+            </div>
+            <div class="ramo estado-pendiente" id="Electivo_Especializacion_2" data-reqs="" data-creditos="6">
+                <div class="codigo">----</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Electivo Especialización</div>
+            </div>
+            <div class="ramo estado-pendiente" id="Electivo_Especializacion_3" data-reqs="" data-creditos="6">
+                <div class="codigo">----</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Electivo Especialización</div>
+            </div>
+            <div class="ramo estado-pendiente" id="EL5115" data-reqs="EL4204, EL4111, EL4112, EL4113" data-creditos="14">
+                <div class="codigo">EL5115</div>
+                <div class="credito-badge">14 Créditos</div>
+                <div class="nombre">Práctica Profesional II</div>
+            </div>
+        </div>
+
+        <div class="semestre">
+            <div class="semestre-titulo">Semestre X</div>
+            <div class="ramo estado-pendiente" id="EL6201" data-reqs="EL6101" data-creditos="6">
+                <div class="codigo">EL6201</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Taller de Emprendimiento e Innovación</div>
+            </div>
+            <div class="ramo estado-pendiente" id="EL6908" data-reqs="EL5115" data-creditos="6">
+                <div class="codigo">EL6908</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Introducción al Trabajo de Título</div>
+            </div>
+            <div class="ramo estado-pendiente" id="Electivo_Especializacion_4" data-reqs="" data-creditos="6">
+                <div class="codigo">----</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Electivo Especialización</div>
+            </div>
+            <div class="ramo estado-pendiente" id="Electivo_Especializacion_5" data-reqs="" data-creditos="6">
+                <div class="codigo">----</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Electivo Especialización</div>
+            </div>
+            <div class="ramo estado-pendiente" id="Electivo_Especializacion_6" data-reqs="" data-creditos="6">
+                <div class="codigo">----</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Electivo Especialización</div>
+            </div>
+        </div>
+
+        <div class="semestre">
+            <div class="semestre-titulo">Semestre XI</div>
+            <div class="ramo estado-pendiente" id="EL6301" data-reqs="EL6101" data-creditos="3">
+                <div class="codigo">EL6301</div>
+                <div class="credito-badge">3 Créditos</div>
+                <div class="nombre">Taller de Desempeño Profesional</div>
+            </div>
+            <div class="ramo estado-pendiente" id="EL6919" data-reqs="EL6908" data-creditos="27">
+                <div class="codigo">EL6919</div>
+                <div class="credito-badge">27 Créditos</div>
+                <div class="nombre">Trabajo de Título</div>
+            </div>
+        </div>
+
+        <div class="semestre">
+            <div class="semestre-titulo">Extras</div>
+            <div class="ramo estado-pendiente" id="ingles_1" data-reqs="" data-creditos="0">
+                <div class="codigo">----</div>
+                <div class="credito-badge">0 Créditos</div>
+                <div class="nombre">Inglés I</div>
+            </div>
+            <div class="ramo estado-pendiente" id="ingles_2" data-reqs="ingles_1" data-creditos="0">
+                <div class="codigo">----</div>
+                <div class="credito-badge">0 Créditos</div>
+                <div class="nombre">Inglés II</div>
+            </div>
+            <div class="ramo estado-pendiente" id="ingles_3" data-reqs="ingles_2" data-creditos="0">
+                <div class="codigo">----</div>
+                <div class="credito-badge">0 Créditos</div>
+                <div class="nombre">Inglés III</div>
+            </div>
+            <div class="ramo estado-pendiente" id="ingles_4" data-reqs="ingles_3" data-creditos="0">
+                <div class="codigo">----</div>
+                <div class="credito-badge">0 Créditos</div>
+                <div class="nombre">Inglés IV</div>
+            </div>
+            <div class="ramo estado-pendiente" id="ingles_5" data-reqs="ingles_4" data-creditos="0">
+                <div class="codigo">----</div>
+                <div class="credito-badge">0 Créditos</div>
+                <div class="nombre">Inglés V</div>
+            </div>
+            <div class="ramo estado-pendiente" id="ingles_examen" data-reqs="" data-creditos="0">
+                <div class="codigo">EI2090</div>
+                <div class="credito-badge">0 Créditos</div>
+                <div class="nombre">Examen de Suficiencia en Inglés I</div>
+            </div>
+            <div class="ramo estado-pendiente" id="ingles_examen_2" data-reqs="ingles_5" data-creditos="0">
+                <div class="codigo">EI2090</div>
+                <div class="credito-badge">0 Créditos</div>
+                <div class="nombre">Examen de Suficiencia en Inglés II</div>
+            </div>
+            <div class="ramo estado-pendiente" id="Electivo_Otro" data-reqs="" data-creditos="6">
+                <div class="codigo">----</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Electivo Otro Departamento</div>
+            </div>
+            <div class="ramo estado-pendiente" id="Electivo_Otro_2" data-reqs="" data-creditos="6">
+                <div class="codigo">----</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Electivo Otro Departamento</div>
+            </div>
+            <div class="ramo estado-pendiente" id="Electivo_Otro_3" data-reqs="" data-creditos="6">
+                <div class="codigo">----</div>
+                <div class="credito-badge">6 Créditos</div>
+                <div class="nombre">Electivo Otro Departamento</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- SCRIPT PARA EL FONDO ROTATIVO ---
+        const fondos = ['fondos/images.jpeg'
+            
+        ];
+        const fondoAleatorio = fondos[Math.floor(Math.random() * fondos.length)];
+        document.body.style.backgroundImage = `linear-gradient(rgba(18, 18, 20, 0.75), rgba(18, 18, 20, 0.75)), url('${fondoAleatorio}')`;
+        // -------------------------------------
+
+        // --- SCRIPT PARA EL ZOOM ---
+        const btnZoom = document.getElementById('btn-zoom');
+        const mallaContenedor = document.querySelector('.malla-container');
+        let isZoomed = false;
+
+        btnZoom.addEventListener('click', () => {
+            if (!isZoomed) {
+                // Obtenemos el ancho real que ocupan todos los semestres
+                const anchoMalla = mallaContenedor.scrollWidth;
+                // Obtenemos el ancho de la ventana del navegador
+                const anchoPantalla = window.innerWidth;
+                
+                // Calculamos el % de reducción necesario (dejando 40px de margen a los lados)
+                const escala = (anchoPantalla - 40) / anchoMalla;
+                
+                mallaContenedor.style.zoom = escala;
+                btnZoom.innerHTML = "🔍";
+                isZoomed = true;
+            } else {
+                mallaContenedor.style.zoom = 1;
+                btnZoom.innerHTML = "🔍";
+                isZoomed = false;
+            }
+        });
+        // ---------------------------
+
+        const ramos = document.querySelectorAll('.ramo');
+        const contadorCreditos = document.getElementById('contador-creditos');
+
+        function actualizarCreditos() {
+            let total = 0;
+            ramos.forEach(r => {
+                if (r.classList.contains('estado-aprobado')) {
+                    total += parseInt(r.getAttribute('data-creditos') || 0);
+                }
+            });
+            contadorCreditos.textContent = total;
+        }
+
+        function cumpleRequisitos(ramo) {
+            const reqsAttr = ramo.getAttribute('data-reqs');
+            if (!reqsAttr) return true; 
+
+            const listaReqs = reqsAttr.split(',').map(s => s.trim());
+            for (let reqId of listaReqs) {
+                if (reqId === "") continue;
+                const reqRamo = document.getElementById(reqId);
+                if (reqRamo && !reqRamo.classList.contains('estado-aprobado')) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const datosGuardados = JSON.parse(localStorage.getItem('mallaData')) || {};
+            
+            ramos.forEach(ramo => {
+                const estadoGuardado = datosGuardados[ramo.id];
+                if (estadoGuardado) {
+                    ramo.classList.remove('estado-pendiente');
+                    ramo.classList.add(estadoGuardado);
+                }
+            });
+            actualizarCreditos();
+        });
+
+        ramos.forEach(ramo => {
+            ramo.addEventListener('click', () => {
+                
+                if (ramo.classList.contains('estado-pendiente') && !cumpleRequisitos(ramo)) {
+                    ramo.classList.add('error-shake');
+                    setTimeout(() => ramo.classList.remove('error-shake'), 300);
+                    return; 
+                }
+
+                if (ramo.classList.contains('estado-pendiente')) {
+                    ramo.classList.remove('estado-pendiente');
+                    ramo.classList.add('estado-cursando');
+                } else if (ramo.classList.contains('estado-cursando')) {
+                    ramo.classList.remove('estado-cursando');
+                    ramo.classList.add('estado-aprobado');
+                } else {
+                    ramo.classList.remove('estado-aprobado');
+                    ramo.classList.add('estado-pendiente');
+                }
+
+                const datosMalla = {};
+                ramos.forEach(r => {
+                    if (r.classList.contains('estado-aprobado')) datosMalla[r.id] = 'estado-aprobado';
+                    else if (r.classList.contains('estado-cursando')) datosMalla[r.id] = 'estado-cursando';
+                });
+                localStorage.setItem('mallaData', JSON.stringify(datosMalla));
+
+                actualizarCreditos();
+            });
+
+            ramo.addEventListener('mouseenter', () => {
+                const idActual = ramo.id;
+                const reqsAttr = ramo.getAttribute('data-reqs');
+                if (reqsAttr) {
+                    reqsAttr.split(',').forEach(reqId => {
+                        const r = document.getElementById(reqId.trim());
+                        if (r) r.classList.add('es-requisito');
+                    });
+                }
+                ramos.forEach(otroRamo => {
+                    const otrosReqs = otroRamo.getAttribute('data-reqs');
+                    if (otrosReqs && otrosReqs.split(',').map(s => s.trim()).includes(idActual)) {
+                        otroRamo.classList.add('es-desbloqueado');
+                    }
+                });
+            });
+
+            ramo.addEventListener('mouseleave', () => {
+                ramos.forEach(r => {
+                    r.classList.remove('es-requisito', 'es-desbloqueado');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
